@@ -27,7 +27,13 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     telephone: Number,
-    childTelephones: [Number],
+    childTelephones: {
+      type: [Number],
+      required: function () {
+        return this.role === "parent";
+      },
+      default: undefined, // 🔥 This prevents automatic saving of []
+    },
     success: { type: Boolean, default: false },
     photo: String,
     cv: String,

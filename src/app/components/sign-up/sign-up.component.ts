@@ -49,7 +49,7 @@ export class SignUpComponent implements OnInit {
           this.formBuilder.control('', [Validators.required, Validators.pattern(/^\d{8}$/)])
         ])
       },
-      { validators: passwordsMatchValidator() }
+      { validators: passwordsMatchValidator() } // ✅ This goes at the form group level
     );
     if (this.path !== '/signUpTeacher') {
       this.signUpForm.removeControl('speciality');
@@ -59,33 +59,24 @@ export class SignUpComponent implements OnInit {
     }
   }
   signUp() {
-    // Clone the form value so we don't mutate the original
-    const userData = { ...this.signUpForm.value };
-
-    // Set the role based on path
     switch (this.path) {
       case '/signUpAdmin':
-        userData.role = 'admin';
-        userData.success = true; // auto validate
+        this.signUpForm.value.role = 'admin';
         break;
       case '/signUpTeacher':
-        userData.role = 'teacher';
+        this.signUpForm.value.role = 'teacher';
         break;
       case '/signUpStudent':
-        userData.role = 'student';
+        this.signUpForm.value.role = 'student';
         break;
       case '/signUpParent':
-        userData.role = 'parent';
+        this.signUpForm.value.role = 'parent';
         break;
       default:
-        userData.role = 'student';
+        this.signUpForm.value.role = 'student';
     }
 
-    // Remove childTelephones if it's not a parent or is empty
-    if (userData.role !== 'parent' || !userData.childTelephones?.length) {
-      delete userData.childTelephones;
-    }
-    this.userService.signUp(userData, { photo: this.photoFile, cv: this.cvFile }).subscribe((response) => {
+    this.userService.signUp(this.signUpForm.value, { photo: this.photoFile, cv: this.cvFile }).subscribe((response) => {
       console.log(response);
       if (response.status == 'USER ALREADY EXISTS') {
         this.emailErrorMsg = response.status;
@@ -98,8 +89,7 @@ export class SignUpComponent implements OnInit {
         Swal.fire({
           title: "Good job!",
           text: "Signup Successfully!",
-          icon: "success",
-          width: "800px",
+          icon: "success"
         });
       }
     });
