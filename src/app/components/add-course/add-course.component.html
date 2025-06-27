@@ -1,7 +1,3 @@
-<app-banner [title]="'Add Course'"></app-banner>
-
-
-
 <div class="site-section">
     <div class="container">
         <div class="row align-items-center justify-content-center">
@@ -12,15 +8,13 @@
                             name="name">
                     </div>
                     <div class="form-group">
-                        <input [(ngModel)]="course.descritption" type="text" class="form-control"
+                        <input [(ngModel)]="course.description" type="text" class="form-control"
                             placeholder="Descritption" name="descritption">
                     </div>
                     <div class="form-group">
                         <input [(ngModel)]="course.duration" type="text" class="form-control" placeholder="Duration"
                             name="duration">
                     </div>
-
-
                     <div class="form-group mt-3">
                         <button type="submit" class="button button-contactForm boxed-btn mx-auto d-block w-100">Add
                             Course</button>

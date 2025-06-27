@@ -17,6 +17,7 @@ export class SignUpComponent implements OnInit {
   photoFile!: File;
   cvFile!: File;
   phoneErrorMsg!: string
+  childPhoneErrorMsg!: string
   emailErrorMsg!: string
 
   constructor(private formBuilder: FormBuilder, private router: Router, private userService: UserService) { }
@@ -75,16 +76,19 @@ export class SignUpComponent implements OnInit {
       default:
         this.signUpForm.value.role = 'student';
     }
-
     this.userService.signUp(this.signUpForm.value, { photo: this.photoFile, cv: this.cvFile }).subscribe((response) => {
       console.log(response);
-      if (response.status == 'USER ALREADY EXISTS') {
-        this.emailErrorMsg = response.status;
-      } else if (response.status == 'INVALID CHILD TELEPHONE') {
-        this.phoneErrorMsg = response.status;
-      }
-
-      else {
+      if (response.status === 'DUPLICATE FIELDS') {
+        this.emailErrorMsg = response.emailExists ? "Email is already in use" : '';
+        this.phoneErrorMsg = response.telephoneExists ? "Telephone number is already in use" : '';
+      } else if (response.status === 'INVALID CHILD TELEPHONE') {
+        this.childPhoneErrorMsg = "One or more child phone numbers are invalid";
+        this.emailErrorMsg = '';
+        this.phoneErrorMsg = '';
+      } else {
+        this.emailErrorMsg = '';
+        this.phoneErrorMsg = '';
+        this.childPhoneErrorMsg = '';
         this.router.navigate(['/login']);
         Swal.fire({
           title: "Good job!",
@@ -93,6 +97,8 @@ export class SignUpComponent implements OnInit {
         });
       }
     });
+
+
   }
   onFileSelected(event: Event, type: 'photo' | 'cv') {
     const input = event.target as HTMLInputElement;

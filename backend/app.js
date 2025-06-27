@@ -82,7 +82,9 @@ app.use((req, res, next) => {
 
 // Models Importations
 const User = require("./models/User");
+const Course = require("./models/Course");
 
+// Sign Up
 app.post(
   "/api/users",
   multer({ storage: storage }).fields([
@@ -96,7 +98,7 @@ app.post(
     // ✅ Force success: true only for admins
     user.success = user.role === "admin";
 
-    // Parse childTelephones for parent only
+    // ✅ Parse childTelephones for parent only
     if (user.role === "parent") {
       try {
         const parsedPhones = JSON.parse(user.childTelephones || "[]");
@@ -110,12 +112,27 @@ app.post(
       delete user.childTelephones;
     }
 
-    User.findOne({ email: user.email }).then((doc) => {
-      if (doc) {
-        return res.json({ status: "USER ALREADY EXISTS" });
+    // ✅ Use $or to check both email and telephone uniqueness
+    User.find({
+      $or: [{ email: user.email }, { telephone: user.telephone }],
+    }).then((docs) => {
+      let emailExists = false;
+      let telephoneExists = false;
+
+      docs.forEach((doc) => {
+        if (doc.email === user.email) emailExists = true;
+        if (doc.telephone === Number(user.telephone)) telephoneExists = true;
+      });
+
+      if (emailExists || telephoneExists) {
+        return res.json({
+          status: "DUPLICATE FIELDS",
+          emailExists,
+          telephoneExists,
+        });
       }
 
-      // For parent, validate child telephones
+      // ✅ Validate child telephones if parent
       if (user.role === "parent") {
         User.find({
           telephone: { $in: user.childTelephones },
@@ -136,12 +153,13 @@ app.post(
 
           if (req.files && req.files["img"]) {
             user.photo =
-              "http://localhost:4000/files/" + req.files["img"][0].filename;
+              "http://localhost:4000/files/photos/" +
+              req.files["img"][0].filename;
           }
 
           if (req.files && req.files["cv"]) {
             user.cv =
-              "http://localhost:4000/files/" + req.files["cv"][0].filename;
+              "http://localhost:4000/files/cvs/" + req.files["cv"][0].filename;
           }
 
           const newUser = new User(user);
@@ -159,5 +177,90 @@ app.post(
     });
   }
 );
+
+// Login
+app.post("/api/users/login", (req, res) => {
+  console.log("login", req.body);
+  const user = req.body;
+  User.findOne({ telephone: user.telephone }).then((find) => {
+    if (!find) {
+      res.json({ status: "Check Your Phone" });
+    } else {
+      bcrypt.compare(user.password, find.password).then((result) => {
+        if (!result) {
+          res.json({ status: "Check Your Password" });
+        } else {
+          const userToSend = {
+            firstName: find.firstName,
+            lastName: find.lastName,
+            photo: find.photo,
+            role: find.role,
+            success: find.success,
+            _id: find._id,
+          };
+          const token = jwt.sign(userToSend, secretKey, {
+            expiresIn: "1h",
+          });
+          res.json({ status: "OK", user: token });
+        }
+      });
+    }
+  });
+});
+
+app.get("/api/users", (req, res) => {
+  console.log("get all users");
+  User.find().then((users) => {
+    res.json({ tab: users, status: "OK" });
+  });
+});
+
+app.put("/api/users/validate", (req, res) => {
+  console.log("update status");
+  const id = req.body.userId;
+  User.updateOne({ _id: id }, { success: true }, (err, doc) => {
+    if (err) {
+      console.log(err);
+      res.json({ status: "Error" });
+    } else {
+      res.json({ status: "OK" });
+    }
+  });
+});
+
+app.get("/api/users/:id", (req, res) => {
+  console.log("get user by id", req.params.id);
+  User.findById(req.params.id).then((doc) => {
+    if (doc) {
+      res.json({ user: doc, status: "OK" });
+    } else {
+      res.json({ status: "No user found with id : " + req.params.id });
+    }
+  });
+});
+
+// Create new course
+app.post("/api/courses", (req, res) => {
+  console.log("create player", req.body);
+  User.findOne({ _id: req.body.teacherId }).then((teacher) => {
+    if (!teacher) {
+      res.json({ status: "Teacher not found" });
+    } else {
+      const newCourse = new Course({
+        name: req.body.name,
+        teacherId: teacher._id,
+        description: req.body.description,
+        duration: req.body.duration,
+      });
+      newCourse.save((err, doc) => {
+        if (err) {
+          res.json({ status: "Error creating Course" });
+        } else {
+          res.json({ status: "OK" });
+        }
+      });
+    }
+  });
+});
 
 module.exports = app;

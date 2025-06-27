@@ -23,6 +23,9 @@ import { SignUpComponent } from './components/sign-up/sign-up.component';
 import { CourseComponent } from './components/course/course.component';
 import { TeacherComponent } from './components/teacher/teacher.component';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { TeacherDashboardComponent } from './components/teacher-dashboard/teacher-dashboard.component';
+import { AdminDashboardComponent } from './components/admin-dashboard/admin-dashboard.component';
+import { DashboardHomeComponent } from './components/dashboard-home/dashboard-home.component';
 
 
 
@@ -46,7 +49,10 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
     SubjectsComponent,
     SignUpComponent,
     CourseComponent,
-    TeacherComponent
+    TeacherComponent,
+    TeacherDashboardComponent,
+    AdminDashboardComponent,
+    DashboardHomeComponent
   ],
   imports: [
     BrowserModule,

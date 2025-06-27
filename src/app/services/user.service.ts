@@ -37,12 +37,15 @@ export class UserService {
       formData.append('childTelephones', JSON.stringify(user.childTelephones));
     }
 
-    return this.http.post<{ status?: string; msg: string }>(this.userUrl, formData);
+    return this.http.post<{
+      status?: string; emailExists?: boolean;
+      telephoneExists?: boolean;
+    }>(this.userUrl, formData);
   }
 
   // Login
   loginUser(user: any) {
-    return this.http.post<{ token: string; user: any }>(`${this.userUrl}/login`, user);
+    return this.http.post<{ status: string; user: any }>(`${this.userUrl}/login`, user);
   }
 
   // Get all users

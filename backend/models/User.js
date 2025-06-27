@@ -27,6 +27,11 @@ const userSchema = new mongoose.Schema(
       required: true,
     },
     telephone: Number,
+    telephone: {
+      type: Number,
+      required: true,
+      unique: true,
+    },
     childTelephones: {
       type: [Number],
       required: function () {
